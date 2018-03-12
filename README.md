@@ -1,1 +1,1 @@
-# Building configuration files
+# Building configuration files.
