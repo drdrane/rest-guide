@@ -101,7 +101,7 @@ spec:
   source:
     git:
       uri: "git@git-cicd.gcloud.belgium.be:rest/styleguide.git"
-      ref: "build"
+      ref: "*/master"
     sourceSecret:
       name: "git-cicd-gcld-tech-ssh"
   strategy:
