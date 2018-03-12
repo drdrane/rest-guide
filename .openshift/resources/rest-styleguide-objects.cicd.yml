@@ -95,13 +95,13 @@ metadata:
   name: "gcloud-rest-styleguide-pipeline"
 spec:
   triggers:
-    - type: "GitHub"
-      github:
-        secret: "secret101"
+    - type: "Generic"
+      generic:
+        secret: "secretwebhookgenericgcloudreststyleguidepipeline"
   source:
     git:
       uri: "git@git-cicd.gcloud.belgium.be:rest/styleguide.git"
-      ref: "*/master"
+      ref: "master"
     sourceSecret:
       name: "git-cicd-gcld-tech-ssh"
   strategy:
