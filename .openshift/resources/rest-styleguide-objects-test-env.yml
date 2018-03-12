@@ -1,0 +1,91 @@
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-website
+spec:
+  replicas: 1
+  selector:
+    name: gcloud-rest-styleguide-website
+  strategy:
+    type: Rolling
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+  template:
+    metadata:
+      labels:
+        name: gcloud-rest-styleguide-website
+    spec:
+      containers:
+        - name: website
+          image: gcloud-rest-styleguide-release:tst
+          command:
+            - run
+          env: []
+          ports:
+            - name: tcp-8080
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          terminationMessagePath: /dev/termination-log
+          imagePullPolicy: Always
+          securityContext:
+            capabilities: {}
+            privileged: false
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        from:
+          kind: ImageStreamTag
+          name: gcloud-rest-styleguide-release:tst
+          namespace: gcloud-services-test-cicd
+        containerNames:
+          - website
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-website
+spec:
+  selector:
+    name: gcloud-rest-styleguide-website
+  ports:
+    - name: tcp-8080
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  type: LoadBalancer
+---
+kind: Route
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-website
+spec:
+  host: gcloud-rest-styleguide-website.test.ext.ssbcloud.be
+  path: /rest
+  to:
+    kind: Service
+    name: gcloud-rest-styleguide-website

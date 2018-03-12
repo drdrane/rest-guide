@@ -1,0 +1,184 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-release
+  annotations:
+    openshift.io/display-name: G-Cloud rest-styleguide-website Release Docker Image
+spec:
+  dockerImageRepository: 'container-release.gcloud.belgium.be/gcloud-rest-styleguide-website'
+  tags:
+    - name: 'prd'
+      annotations:
+        openshift.io/display-name: G-Cloud rest-styleguide-website Release Docker Image ( prd )
+        openshift.io/provider-display-name: 'G-Cloud Greenshift'
+        description: >-
+          G-Cloud rest-styleguide-website Docker Image in Release Repository tagged for Production deployment.
+        iconClass: icon-nginx
+        tags: 'gcloud,nginx,web,documentation,rest'
+        sampleRepo: 'https://git-cicd.gcloud.belgium.be/rest/styleguide.git'
+      from:
+        kind: DockerImage
+        name: 'container-release.gcloud.belgium.be/gcloud-rest-styleguide-website:prd'
+      importPolicy:
+        scheduled: true
+      referencePolicy:
+        type: Source
+    - name: 'tst'
+      annotations:
+        openshift.io/display-name: G-Cloud rest-styleguide-website Release Docker Image ( tst )
+        openshift.io/provider-display-name: 'G-Cloud Greenshift'
+        description: >-
+          G-Cloud rest-styleguide-website Docker Image in Release Repository tagged for Test deployment.
+        iconClass: icon-nginx
+        tags: 'gcloud,nginx,web,documentation,rest'
+        sampleRepo: 'https://git-cicd.gcloud.belgium.be/rest/styleguide.git'
+      from:
+        kind: DockerImage
+        name: 'container-release.gcloud.belgium.be/gcloud-rest-styleguide-website:tst'
+      importPolicy:
+        scheduled: true
+      referencePolicy:
+        type: Source
+---
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-snapshot
+  annotations:
+    openshift.io/display-name: G-Cloud rest-styleguide-website Snapshot Docker Image
+spec:
+  dockerImageRepository: 'container-snapshot.gcloud.belgium.be/gcloud-rest-styleguide-website'
+  tags:
+    - name: 'latest'
+      annotations:
+        openshift.io/display-name: G-Cloud rest-styleguide-website Snapshot Docker Image ( latest )
+        openshift.io/provider-display-name: 'G-Cloud Greenshift'
+        description: >-
+          G-Cloud rest-styleguide-website Docker Image in Snapshot Repository.
+        iconClass: icon-nginx
+        tags: 'gcloud,nginx,web,documentation,rest'
+        sampleRepo: 'https://git-cicd.gcloud.belgium.be/rest/styleguide.git'
+      from:
+        kind: DockerImage
+        name: 'container-snapshot.gcloud.belgium.be/gcloud-rest-styleguide-website:snapshot'
+      importPolicy:
+        scheduled: true
+      referencePolicy:
+        type: Source
+---
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: "gcloud-rest-styleguide-website"
+spec:
+  runPolicy: "Serial"
+  triggers: []
+  source:
+    binary: {}
+  strategy:
+    dockerStrategy:
+      from:
+        kind: "ImageStreamTag"
+        name: "base-nginx:latest"
+      noCache: true
+      forcePull: true
+  output:
+    to:
+      kind: "ImageStreamTag"
+      name: "gcloud-rest-styleguide-snapshot:latest"
+  postCommit:
+      script: ""
+---
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: "gcloud-rest-styleguide-pipeline"
+spec:
+  triggers:
+    - type: "GitHub"
+      github:
+        secret: "secret101"
+  source:
+    git:
+      uri: "git@git-cicd.gcloud.belgium.be:rest/styleguide.git"
+      ref: "build"
+    sourceSecret:
+      name: "git-cicd-gcld-tech-ssh"
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfilePath: Jenkinsfile
+---
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-website
+spec:
+  replicas: 0
+  selector:
+    name: gcloud-rest-styleguide-website
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: gcloud-rest-styleguide-website
+    spec:
+      containers:
+        - name: website
+          image: gcloud-rest-styleguide-snapshot:latest
+          command:
+            - run
+          env: []
+          ports:
+            - name: tcp-8080
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          terminationMessagePath: /dev/termination-log
+          imagePullPolicy: Always
+          securityContext:
+            capabilities: {}
+            privileged: false
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-website
+spec:
+  selector:
+    name: gcloud-rest-styleguide-website
+  ports:
+    - name: tcp-8080
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  type: ClusterIP
+---
+kind: Route
+apiVersion: v1
+metadata:
+  name: gcloud-rest-styleguide-website
+spec:
+  host: gcloud-rest-styleguide-website.test.paas.services.gcloud.belgium.be
+  path: /rest
+  to:
+    kind: Service
+    name: gcloud-rest-styleguide-website
