@@ -1,5 +1,0 @@
-== OAuth ==
-
-RESTful services are secured following the https://tools.ietf.org/html/rfc6749[OAuth 2.0 Authorization Framework (RFC 6749)^].
-
-CAUTION: further guidelines are being worked out by the REST Security workgroup
