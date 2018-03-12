@@ -157,6 +157,17 @@ spec:
           securityContext:
             capabilities: {}
             privileged: false
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        from:
+          kind: ImageStreamTag
+          name: gcloud-rest-styleguide-snapshot:latest
+          namespace: gcloud-services-test-cicd
+        containerNames:
+          - website
 ---
 kind: Service
 apiVersion: v1
