@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: website
-          image: gcloud-rest-styleguide-release:prd
+          image: gcloud-rest-styleguide:prd
           command:
             - run
           env: []
@@ -60,8 +60,8 @@ spec:
         automatic: true
         from:
           kind: ImageStreamTag
-          name: gcloud-rest-styleguide-release:prd
-          namespace: gcloud-services-test-cicd
+          name: gcloud-rest-styleguide:prd
+          namespace: gcloud-services-prod-cicd
         containerNames:
           - website
 ---
