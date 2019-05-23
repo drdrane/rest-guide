@@ -61,7 +61,7 @@ apiVersion: v1
 metadata:
   name: "gcloud-rest-styleguide-website"
 spec:
-  runPolicy: "Serial"
+  runPolicy: "SerialLatestOnly"
   triggers: []
   source:
     binary: {}
@@ -84,6 +84,7 @@ apiVersion: v1
 metadata:
   name: "gcloud-rest-styleguide-pipeline"
 spec:
+  runPolicy: "SerialLatestOnly"
   triggers:
     - type: "Generic"
       generic:
